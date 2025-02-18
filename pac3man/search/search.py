@@ -87,11 +87,49 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    print("\nDepth first search!\n")
-    print("Start:", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
-    #util.raiseNotDefined()
+    from util import Stack
+
+    # stack format: ((x,y),[path to this coordinate]) #
+    my_stack = Stack()
+
+    visited = [] # Past states
+    path = [] # Each state knows the path to its coordinate
+
+    # Check if initial state is the end goal.
+    # Simply return an empty list in this case, state is already valid. 
+    if problem.isGoalState(problem.getStartState()):
+        return []
+
+    # Push initial state, and naturally the path is an empty list #
+    my_stack.push((problem.getStartState(),[]))
+    
+    while(True):
+
+        # No solution exists, return empty list
+        if my_stack.isEmpty():
+            return []
+
+        # Retrieve current info
+        xy,path = my_stack.pop() # Retrieve most recent state (coordinates), and path to get there. 
+        visited.append(xy) # Add these coordinates to the back of visited list. 
+
+        # If we reached the goal, terminate by returning the path#
+        if problem.isGoalState(xy):
+            return path
+
+         # This uses getSuccessors, passing it our current "state" coordinates
+         # getSuccesors returns nextState, action, cost
+        next_moves = problem.getSuccessors(xy)
+
+         # If there are more options to traverse
+         # And most importantly, they have not been visited yet,
+         # Then add their path to the current path
+        if next_moves:
+            for succ in next_moves: #successor
+                if succ[0] not in visited: #next coordinate (move[0])
+
+                    newPath = path + [succ[1]] # Calculate new path, with action to get there move[1]
+                    my_stack.push((succ[0],newPath))
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
