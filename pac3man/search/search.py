@@ -87,54 +87,59 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    from util import Stack
+    from util import Stack  # Stack ensures LIFO (last-in, first-out) behavior
 
-    # stack format: ((x,y),[path to this coordinate]) #
-    my_stack = Stack()
+    my_stack = Stack()  # Stack stores (state, path)
+    visited = set()  # Tracks visited states
 
-    visited = [] # Past states
-    path = [] # Each state knows the path to its coordinate
+    my_stack.push((problem.getStartState(), []))  # Start state with an empty path
 
-    # Check if initial state is the end goal.
-    # Simply return an empty list in this case, state is already valid. 
-    if problem.isGoalState(problem.getStartState()):
-        return []
+    while not my_stack.isEmpty():
+        xy, path = my_stack.pop()  # Pop the most recent state
 
-    # Push initial state, and naturally the path is an empty list #
-    my_stack.push((problem.getStartState(),[]))
-    
-    while(True):
-
-        # No solution exists, return empty list
-        if my_stack.isEmpty():
-            return []
-
-        # Retrieve current info
-        xy,path = my_stack.pop() # Retrieve most recent state (coordinates), and path to get there. 
-        visited.append(xy) # Add these coordinates to the back of visited list. 
-
-        # If we reached the goal, terminate by returning the path#
-        if problem.isGoalState(xy):
+        if problem.isGoalState(xy):  # Goal check
             return path
 
-         # This uses getSuccessors, passing it our current "state" coordinates
-         # getSuccesors returns nextState, action, cost
-        next_moves = problem.getSuccessors(xy)
+        if xy not in visited:
+            visited.add(xy)  # Mark as visited
+            for nextState, action, _ in problem.getSuccessors(xy): # Recall successors returns both state (coordinates), and actions (path)
+                if nextState not in visited:
+                    my_stack.push((nextState, path + [action]))  # Add new path to stack
 
-         # If there are more options to traverse
-         # And most importantly, they have not been visited yet,
-         # Then add their path to the current path
-        if next_moves:
-            for succ in next_moves: #successor
-                if succ[0] not in visited: #next coordinate (move[0])
-
-                    newPath = path + [succ[1]] # Calculate new path, with action to get there move[1]
-                    my_stack.push((succ[0],newPath))
+    return []  # Return empty if no solution found
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Queue # we need Queue for breadth first (FIFO)
+
+    # Queue format ((x,y),[path to this coordinate]) #
+    my_q = Queue()
+
+    visited = set()  # Tracks visited states
+    path = [] # Each state knows the path to its coordinate
+
+     # Check if initial state is the end goal.
+    # Simply return an empty list in this case, state is already valid. 
+    if problem.isGoalState(problem.getStartState()):
+        return []
+
+    # Push initial state, the initial path is an empty list #
+    my_q.push((problem.getStartState(),[]))
+
+    while not my_q.isEmpty():
+        xy, path = my_q.pop()  # Dequeue the oldest state
+
+        if problem.isGoalState(xy):  # Goal check
+            return path
+
+        if xy not in visited:
+            visited.add(xy)  # Mark as visited
+            for nextState, action, _ in problem.getSuccessors(xy):
+                if nextState not in visited:
+                    my_q.push((nextState, path + [action]))  # Add new path to queue
+
+    return []  # Return empty if no solution found
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
