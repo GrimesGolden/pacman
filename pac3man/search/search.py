@@ -140,14 +140,13 @@ def breadthFirstSearch(problem):
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    from util import PriorityQueue # we need a priority queue (cost based) for UCS.
+    from util import PriorityQueue
+    from util import PriorityQueueWithFunction # we need a priority queue (cost based) for UCS.
     # Remember: priority queu always returns the next cheapest node...see util.py. 
-
-    # Queue format (((node),[path to this node], cost of action),priority) 
-    # We push 4 pieces of info, a tuple (node, path to node, cost)
-    # And the priority, which in the case of UCS is also the cost. 
-    my_pq = PriorityQueue()
+      
+    # This creates a priority queue where each item’s priority is determined by a function.
+    # This in line function always extract the 3rd element of the tuple, and that will be the priority (the third element is cost)
+    my_pq = PriorityQueueWithFunction(lambda state: state[2])
 
     # Create an empty dictionary for visited nodes
     # It is not a set this time, because we need the node, AND its cost. 
@@ -162,8 +161,10 @@ def uniformCostSearch(problem):
     if problem.isGoalState(problem.getStartState()):
         return []
 
-    # Push initial state, The queue starts with (startState, [], 0), where 0 is the cost. The priority is always the cost
-    my_pq.push((problem.getStartState(), path, cost), cost)
+    # Push initial state, a tuple
+    # Queue format (((node),[path to this node], cost of action),priority) 
+    # We push 4 pieces of info, a tuple (node, path to node, cost)
+    my_pq.push((problem.getStartState(), path, cost))
 
 
 
@@ -177,8 +178,7 @@ def uniformCostSearch(problem):
         if node not in visited or cost < visited[node]:
             visited[node] = cost  # Mark as visited with its cost, OR update the cost with the new cheaper version. 
             for nextNode, action, nextCost, in problem.getSuccessors(node):
-                if nextNode not in visited:
-                    my_pq.push((nextNode, path + [action], cost + nextCost), cost + nextCost)  # Add new path to queue
+                my_pq.push((nextNode, path + [action], cost + nextCost))  # Push next state
                     # We don't just update the path this time, we must also update the cost for each subsequent node. 
 
     return []  # Return empty if no solution found
@@ -192,9 +192,38 @@ def nullHeuristic(state, problem=None):
     return 0
 
 def aStarSearch(problem, heuristic=nullHeuristic):
-    """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    """Search the node that has the lowest combined cost (g + h) first."""
+    from util import PriorityQueue
+
+    # Priority queue stores (state, path taken, cost g(n)), prioritized by f(n)
+    frontier = PriorityQueue()
+    visited = {}  # Dictionary to track best cost to reach each state
+
+    start_state = problem.getStartState()
+    frontier.push((start_state, [], 0), 0 + heuristic(start_state, problem))  # f(n) = g(n) + h(n)
+
+    while not frontier.isEmpty():
+        state, path, cost = frontier.pop()  # Get node with lowest f(n)
+
+        # If goal is reached, return the path taken
+        if problem.isGoalState(state):
+            return path
+
+        # If state was visited with a lower cost before, skip processing
+        if state in visited and visited[state] <= cost:
+            continue
+
+        visited[state] = cost  # Mark this state with the best cost
+
+        # Expand the node
+        for successor, action, step_cost in problem.getSuccessors(state):
+            new_cost = cost + step_cost  # g(n)
+            total_cost = new_cost + heuristic(successor, problem)  # f(n)
+
+            frontier.push((successor, path + [action], new_cost), total_cost)
+
+    return []  # No solution found
+
 
 
 # Abbreviations
