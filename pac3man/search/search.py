@@ -193,36 +193,36 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost (g + h) first."""
-    from util import PriorityQueue
+    from util import PriorityQueueWithFunction
 
-    # Priority queue stores (state, path taken, cost g(n)), prioritized by f(n)
-    frontier = PriorityQueue()
+    # Define the priority function: f(n) = g(n) + h(n)
+    priorityFunction = lambda item: item[2] + heuristic(item[0], problem)  # f(n) = g(n) + h(n)
+    # Cost + heuristic(node, problem)
+
+    # Initialize the priority queue with this function
+    frontier = PriorityQueueWithFunction(priorityFunction)
     visited = {}  # Dictionary to track best cost to reach each state
 
     start_state = problem.getStartState()
-    frontier.push((start_state, [], 0), 0 + heuristic(start_state, problem))  # f(n) = g(n) + h(n)
+    frontier.push((start_state, [], 0))  # (state, path, g(n))
 
     while not frontier.isEmpty():
         state, path, cost = frontier.pop()  # Get node with lowest f(n)
 
-        # If goal is reached, return the path taken
         if problem.isGoalState(state):
             return path
 
-        # If state was visited with a lower cost before, skip processing
         if state in visited and visited[state] <= cost:
             continue
 
         visited[state] = cost  # Mark this state with the best cost
 
-        # Expand the node
         for successor, action, step_cost in problem.getSuccessors(state):
             new_cost = cost + step_cost  # g(n)
-            total_cost = new_cost + heuristic(successor, problem)  # f(n)
-
-            frontier.push((successor, path + [action], new_cost), total_cost)
+            frontier.push((successor, path + [action], new_cost))  # No need to specify priority explicitly!
 
     return []  # No solution found
+
 
 
 

@@ -289,21 +289,24 @@ class CornersProblem(search.SearchProblem):
         # in initializing the problem
         "*** YOUR CODE HERE ***"
 
+        # Note that state always returns a tuple in this form (position(xy), [array of 4 bools representing corners visited])
     def getStartState(self):
         """
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
         "*** YOUR CODE HERE ***"
-        return (self.startingPosition, (False, False, False, False))  # Pacman's start position and corners visited
+        return (self.startingPosition, (False, False, False, False))  # Pacman's start position and corners visited ( At the start we visit no corners obviously)
        
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
+        # Return true only if every corner is true (i.e vitisted)
         return all(state[1])  # Check if all corners have been visited)
 
     def getSuccessors(self, state):
+        # Note:  This class is what actually simulates movement and determines the next possible states!
         """
         Returns successor states, the actions they require, and a cost of 1.
 
@@ -329,18 +332,22 @@ class CornersProblem(search.SearchProblem):
             nextx, nexty = int(x + dx), int(y + dy)
 
             nextPosition = (x, y)  # Default to current position in case of a wall
-        
+            
+            # Only if the position is not a wall do we move on, otherwise hold in place. 
             if not self.walls[nextx][nexty]:  # If the move is valid
                 nextPosition = (nextx, nexty)
             
             # Check if we reached an unvisited corner
             newVisitedCorners = list(visitedCorners)
+            # If the next position would take us to one of the four corners...
             if nextPosition in self.corners:
                 cornerIndex = self.corners.index(nextPosition)
                 newVisitedCorners[cornerIndex] = True  # Mark this corner as visited
             
+                # Store this successor state. 
             successors.append(((nextPosition, tuple(newVisitedCorners)), action, 1))    
 
+            # Used in the autograder to track how many nodes were expanded. 
         self._expanded += 1 # DO NOT CHANGE
         return successors
 
