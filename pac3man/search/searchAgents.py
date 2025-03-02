@@ -364,6 +364,50 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
+import heapq  # For priority queue (min-heap)
+
+def computeMSTCost(points):
+    # This is not an original function, we need it to create a MST (Minimum Spanning Tree). 
+    """
+    Computes the Minimum Spanning Tree (MST) cost using Prim's Algorithm.
+    points: List of (x, y) coordinates representing unvisited corners.
+    Returns the total MST cost.
+    """
+    if not points:  # If no unvisited corners, MST cost is 0
+        return 0
+
+    # Start Prim's Algorithm from the first corner
+    mst_cost = 0
+    visited = set()  # To track visited points
+    pq = []  # Priority queue to store (cost, point)
+    
+    # Start from the first corner
+    start_point = points[0]
+    visited.add(start_point)
+    
+    # Add edges from start_point to all other points
+    for point in points[1:]:
+        cost = abs(start_point[0] - point[0]) + abs(start_point[1] - point[1])  # Manhattan distance, same as we learned in class. 
+        heapq.heappush(pq, (cost, start_point, point))
+
+    while len(visited) < len(points):
+        # Get the closest unvisited edge
+        cost, _, new_point = heapq.heappop(pq)
+        
+        if new_point in visited:
+            continue  # Ignore if already visited
+
+        # Add this point to MST
+        visited.add(new_point)
+        mst_cost += cost
+
+        # Add new edges from this point to all remaining points
+        for point in points:
+            if point not in visited:
+                new_cost = abs(new_point[0] - point[0]) + abs(new_point[1] - point[1])
+                heapq.heappush(pq, (new_cost, new_point, point))
+
+    return mst_cost
 
 def cornersHeuristic(state, problem):
     """
@@ -382,7 +426,26 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+
+    """
+    An improved heuristic for the CornersProblem using MST.
+    """
+    current_position = state[0]  # Pac-Man's position
+    visited_corners = state[1]   # Tuple of visited corner statuses
+
+    # Get the list of unvisited corners
+    unvisited_corners = [corner for i, corner in enumerate(problem.corners) if not visited_corners[i]]
+
+    if not unvisited_corners:
+        return 0  # Goal reached
+
+    # Step 1: Find the Manhattan distance to the closest unvisited corner
+    min_distance = min(abs(current_position[0] - cx) + abs(current_position[1] - cy) for (cx, cy) in unvisited_corners)
+
+    # Step 2: Compute MST cost of unvisited corners
+    mst_cost = computeMSTCost(unvisited_corners)
+
+    return min_distance + mst_cost  # Total heuristic estimate
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
